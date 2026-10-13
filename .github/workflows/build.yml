@@ -5,9 +5,23 @@ on:
     branches: [ "**" ]
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_BASEDIR: ${{ github.workspace }}
+  CCACHE_MAXSIZE: 5G
+  CCACHE_COMPRESS: "1"
+  CCACHE_COMPILERCHECK: content
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout Source Code with Submodules
         uses: actions/checkout@v4
@@ -21,27 +35,49 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Accept Licenses & Install NDK & ccache
+      - name: Install NDK, CMake & ccache
         run: |
           sudo apt-get update && sudo apt-get install -y ccache
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
 
-      - name: Setup ccache Cache
-        uses: actions/cache@v4
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
         with:
-          path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-${{ hashFiles('**/*.cpp', '**/*.c', '**/*.h') }}
+          path: .ccache
+          key: ccache-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ runner.os }}-
 
+      - name: Reset ccache stats
+        run: |
+          ccache -z
+          ccache -s
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: false
 
       - name: Build Standalone Debug APK
         run: |
           chmod +x ./gradlew
-          ./gradlew :TMessagesProj_AppStandalone:assembleDebug -PabiList=arm64-v8a --stacktrace
+          ./gradlew :TMessagesProj_AppStandalone:assembleDebug \
+            -PabiList=arm64-v8a \
+            --build-cache \
+            --stacktrace
+
+      - name: Print ccache statistics
+        if: always()
+        run: ccache -s
+
+      - name: Save ccache
+        if: always() && steps.ccache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .ccache
+          key: ccache-${{ runner.os }}-${{ github.sha }}
 
       - name: Upload Telegram APK
         uses: actions/upload-artifact@v4
