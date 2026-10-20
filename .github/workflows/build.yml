@@ -55,6 +55,26 @@ jobs:
           ccache -z
           ccache -s
 
+      - name: Inject Secure API Credentials
+        env:
+          TG_APP_ID: ${{ secrets.TELEGRAM_APP_ID }}
+          TG_APP_HASH: ${{ secrets.TELEGRAM_APP_HASH }}
+        run: |
+          F=TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+
+          # secret ha bayad por va dorost bashan
+          [[ "$TG_APP_ID" =~ ^[0-9]+$ ]] || { echo "TELEGRAM_APP_ID khali ya ghalat ast (faghat adad)"; exit 1; }
+          [[ "$TG_APP_HASH" =~ ^[0-9a-fA-F]{32}$ ]] || { echo "TELEGRAM_APP_HASH khali ya ghalat ast (32 character hex)"; exit 1; }
+
+          sed -i "s/public static int APP_ID = .*/public static int APP_ID = ${TG_APP_ID};/" "$F"
+          sed -i "s/public static String APP_HASH = .*/public static String APP_HASH = \"${TG_APP_HASH}\";/" "$F"
+          sed -i "s/public static boolean SUPPORTS_PASSKEYS = .*/public static boolean SUPPORTS_PASSKEYS = false;/" "$F"
+
+          # check: age sed chizi ro avaz nakarde bashe, fail kon
+          grep -qF "APP_ID = ${TG_APP_ID};" "$F" || { echo "APP_ID inject nashod"; exit 1; }
+          grep -qF "APP_HASH = \"${TG_APP_HASH}\";" "$F" || { echo "APP_HASH inject nashod"; exit 1; }
+          grep -n "SUPPORTS_PASSKEYS" "$F" > /dev/null || echo "Hoshdar: SUPPORTS_PASSKEYS tuye file nist"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -83,5 +103,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-Official-Debug-APK
+          retention-days: 1
           path: |
             **/build/outputs/apk/**/*.apk
