@@ -25,13 +25,18 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Configure git identity
+        run: |
+          git config --global user.name "opencode-agent"
+          git config --global user.email "opencode-agent@users.noreply.github.com"
+
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Free model-e Zen. Age hazf shode bud, tuye opencode.ai/docs/zen list ro bebin
-          # va esm ro ba format-e opencode/<model-id> avaz kon (masalan opencode/big-pickle)
+          # Free model-e Zen. Age khata-ye "Model not found" dad, esm-e pishnahadi tuye log ro bezar
+          # ya list ro tuye opencode.ai/docs/zen bebin (format: opencode/<model-id>)
           model: opencode/deepseek-v4.1-flash-free
           use_github_token: true
