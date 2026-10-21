@@ -24,7 +24,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-          persist-credentials: false
+          # lazem baraye git push ba GITHUB_TOKEN (ba false, push "could not read Username" mide)
+          persist-credentials: true
 
       - name: Configure git identity
         run: |
