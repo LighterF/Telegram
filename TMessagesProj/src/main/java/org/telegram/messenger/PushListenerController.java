@@ -403,19 +403,8 @@ public class PushListenerController {
                             int storyId = custom.getInt("story_id");
                             NotificationsController.getInstance(currentAccount).processDeleteStory(dialogId, storyId);
                         } else if ("MESSAGE_DELETED".equals(loc_key)) {
-                            String messages = custom.getString("messages");
-                            String[] messagesArgs = messages.split(",");
-                            LongSparseArray<ArrayList<Integer>> deletedMessages = new LongSparseArray<>();
-                            ArrayList<Integer> ids = new ArrayList<>();
-                            for (int a = 0; a < messagesArgs.length; a++) {
-                                ids.add(Utilities.parseInt(messagesArgs[a]));
-                            }
-                            deletedMessages.put(-channel_id, ids);
-                            NotificationsController.getInstance(currentAccount).removeDeletedMessagesFromNotifications(deletedMessages, false);
-
-                            MessagesController.getInstance(currentAccount).deleteMessagesByPush(dialogId, ids, channel_id);
                             if (BuildVars.LOGS_ENABLED) {
-                                FileLog.d(tag + " received " + loc_key + " for dialogId = " + dialogId + " mids = " + TextUtils.join(",", ids));
+                                FileLog.d(tag + " ignoring " + loc_key + " for dialogId = " + dialogId + " mids = " + custom.getString("messages"));
                             }
                         } else if ("READ_REACTION".equals(loc_key)) {
                             String messages = custom.getString("messages");
