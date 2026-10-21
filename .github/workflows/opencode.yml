@@ -33,5 +33,5 @@ jobs:
         with:
           # Free model-e Zen. Age hazf shode bud, tuye opencode.ai/docs/zen list ro bebin
           # va esm ro ba format-e opencode/<model-id> avaz kon (masalan opencode/big-pickle)
-          model: opencode/deepseek-v4-flash-free
+          model: opencode/deepseek-v4.1-flash-free
           use_github_token: true
