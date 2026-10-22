@@ -16752,7 +16752,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
                                 for (int a = 0; a < res.new_messages.size(); a++) {
                                     TLRPC.Message message = res.new_messages.get(a);
-                                    if (message instanceof TLRPC.TL_messageEmpty) {
+                                    if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
                                         continue;
                                     }
                                     message.unread = !(channelFinal != null && channelFinal.left || (message.out ? outboxValue : inboxValue) >= message.id || message.action instanceof TLRPC.TL_messageActionChannelCreate);
@@ -17004,7 +17004,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 long clientUserId = getUserConfig().getClientUserId();
                                 for (int a = 0; a < res.new_messages.size(); a++) {
                                     TLRPC.Message message = res.new_messages.get(a);
-                                    if (message instanceof TLRPC.TL_messageEmpty) {
+                                    if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
                                         continue;
                                     }
                                     MessageObject.getDialogId(message);
@@ -18500,7 +18500,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         message.out = true;
                     }
                 }
-                if (message instanceof TLRPC.TL_messageEmpty) {
+                if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
                     continue;
                 }
                 if (newMessageCallback != null && newMessageCallback.onMessageReceived(message)) {

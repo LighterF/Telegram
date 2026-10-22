@@ -12592,6 +12592,16 @@ public class MessagesStorage extends BaseController {
                     if (message == null || message instanceof TLRPC.TL_messageEmpty) {
                         continue;
                     }
+                    if (message.action instanceof TLRPC.TL_messageActionHistoryClear) {
+                        MessageObject.getDialogId(message);
+                        cursor = database.queryFinalized(String.format(Locale.US, "SELECT 1 FROM messages_v2 WHERE mid = %d AND uid = %d", message.id, message.dialog_id));
+                        boolean exists = cursor.next();
+                        cursor.dispose();
+                        cursor = null;
+                        if (exists) {
+                            continue;
+                        }
+                    }
                     fixUnsupportedMedia(message);
                     long topicId = MessageObject.getTopicId(currentAccount, message, getForumTypeFlags(message.dialog_id));
 
@@ -16277,6 +16287,15 @@ public class MessagesStorage extends BaseController {
                         TLRPC.Message message = messages.messages.get(a);
                         if (message instanceof TLRPC.TL_messageEmpty) {
                             continue;
+                        }
+                        if (message.action instanceof TLRPC.TL_messageActionHistoryClear) {
+                            cursor = database.queryFinalized(String.format(Locale.US, "SELECT 1 FROM messages_v2 WHERE mid = %d AND uid = %d", message.id, dialogId));
+                            boolean exists = cursor.next();
+                            cursor.dispose();
+                            cursor = null;
+                            if (exists) {
+                                continue;
+                            }
                         }
                         if (lastMessageId == null && message != null || lastMessageId != null && lastMessageId < message.id) {
                             lastMessageId = message.id;
