@@ -6774,6 +6774,9 @@ public class MediaDataController extends BaseController {
                 }
                 for (int a = 0; a < result.size(); a++) {
                     TLRPC.Message message = result.get(a);
+                    if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
+                        continue;
+                    }
                     long dialogId = MessageObject.getDialogId(message);
                     SparseArray<ArrayList<MessageObject>> sparseArray = replyMessageOwners.get(dialogId);
                     if (sparseArray == null) {
@@ -6826,7 +6829,11 @@ public class MediaDataController extends BaseController {
         }
         ArrayList<MessageObject> messageObjects = new ArrayList<>();
         for (int a = 0, N = result.size(); a < N; a++) {
-            messageObjects.add(new MessageObject(currentAccount, result.get(a), usersDict, chatsDict, false, false));
+            TLRPC.Message message = result.get(a);
+            if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
+                continue;
+            }
+            messageObjects.add(new MessageObject(currentAccount, message, usersDict, chatsDict, false, false));
         }
         AndroidUtilities.runOnUIThread(() -> {
             getMessagesController().putUsers(users, isCache);
