@@ -26636,6 +26636,11 @@ public class ChatActivity extends BaseFragment implements
         LongSparseArray<MessageObject.GroupedMessages> newGroups = null;
         for (int a = 0; a < messageObjects.size(); a++) {
             MessageObject messageObject = messageObjects.get(a);
+            if (messageObject.messageOwner != null &&
+                    (messageObject.messageOwner instanceof TLRPC.TL_messageEmpty || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionHistoryClear) &&
+                    messagesDict[loadIndex].indexOfKey(messageObject.getId()) >= 0) {
+                continue;
+            }
 
             MessageObject pinnedOld = pinnedMessageObjects.get(messageObject.getId());
             if (pinnedOld != null) {
