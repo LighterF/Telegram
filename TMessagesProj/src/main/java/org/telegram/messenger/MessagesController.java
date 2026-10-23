@@ -10051,6 +10051,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     protected void deleteDialog(long did, int first, int onlyHistory, int max_id, boolean revoke, TLRPC.InputPeer peer, long taskId) {
+        if (onlyHistory == 3) {
+            return;
+        }
         if (onlyHistory == 2) {
             if (did == getUserConfig().getClientUserId()) {
                 getSavedMessagesController().deleteAllDialogs();
@@ -16749,7 +16752,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
                                 for (int a = 0; a < res.new_messages.size(); a++) {
                                     TLRPC.Message message = res.new_messages.get(a);
-                                    if (message instanceof TLRPC.TL_messageEmpty) {
+                                    if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
                                         continue;
                                     }
                                     message.unread = !(channelFinal != null && channelFinal.left || (message.out ? outboxValue : inboxValue) >= message.id || message.action instanceof TLRPC.TL_messageActionChannelCreate);
@@ -17001,7 +17004,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 long clientUserId = getUserConfig().getClientUserId();
                                 for (int a = 0; a < res.new_messages.size(); a++) {
                                     TLRPC.Message message = res.new_messages.get(a);
-                                    if (message instanceof TLRPC.TL_messageEmpty) {
+                                    if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
                                         continue;
                                     }
                                     MessageObject.getDialogId(message);
@@ -18479,7 +18482,7 @@ public class MessagesController extends BaseController implements NotificationCe
             if (BuildVars.LOGS_ENABLED && baseUpdate != null) {
                 FileLog.d("process update " + baseUpdate.getClass().getSimpleName());
             }
-            if (baseUpdate instanceof TL_update.TL_updateDeleteMessages || baseUpdate instanceof TL_update.TL_updateDeleteChannelMessages) {
+            if (baseUpdate instanceof TL_update.TL_updateDeleteMessages || baseUpdate instanceof TL_update.TL_updateDeleteChannelMessages || baseUpdate instanceof TL_update.TL_updateChannelAvailableMessages) {
                 continue;
             }
             if (baseUpdate instanceof TL_update.TL_updateNewMessage || baseUpdate instanceof TL_update.TL_updateNewChannelMessage || baseUpdate instanceof TL_update.TL_updateNewScheduledMessage) {
@@ -18497,7 +18500,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         message.out = true;
                     }
                 }
-                if (message instanceof TLRPC.TL_messageEmpty) {
+                if (message instanceof TLRPC.TL_messageEmpty || message.action instanceof TLRPC.TL_messageActionHistoryClear) {
                     continue;
                 }
                 if (newMessageCallback != null && newMessageCallback.onMessageReceived(message)) {
